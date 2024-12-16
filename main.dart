@@ -1,190 +1,141 @@
-// import 'package:flutter/material.dart';
-
-// void main() {
-//   runApp(const MainApp());
-// }
-
-// class MainApp extends StatelessWidget {
-//   const MainApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return const MaterialApp(
-//       home: Scaffold(
-//         body: Center(
-//           child: Text('Hello World!'),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
-import 'app_model.dart';
-export 'app_model.dart';
-
-class AppWidget extends StatefulWidget {
-  const AppWidget({super.key});
-
-  @override
-  State<AppWidget> createState() => _AppWidgetState();
+void main() {
+  runApp(PerformanceCheckApp());
 }
 
-class _AppWidgetState extends State<AppWidget> {
-  late AppModel _model;
-
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-
+class PerformanceCheckApp extends StatelessWidget {
   @override
-  void initState() {
-    super.initState();
-    _model = createModel(context, () => AppModel());
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Performance Check',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _timingController = TextEditingController();
+  String _responseMessage = '';
+  Map<String, dynamic>? _performanceData;
+  List<dynamic>? _improvementTips;
+
+  final String apiBaseUrl = 'http://127.0.0.1:8000'; // Change to your backend URL
+
+  Future<void> addRaceResult() async {
+    final url = Uri.parse('$apiBaseUrl/add_race_result');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': _nameController.text,
+        'timing': double.tryParse(_timingController.text),
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      setState(() {
+        _responseMessage = responseData['message'] ?? 'Race result added.';
+        _improvementTips = responseData['tips'] ?? [];
+      });
+    } else {
+      setState(() {
+        _responseMessage = jsonDecode(response.body)['detail'] ?? 'An error occurred.';
+      });
+    }
   }
 
-  @override
-  void dispose() {
-    _model.dispose();
+  Future<void> viewPerformance() async {
+    final url = Uri.parse('$apiBaseUrl/view_performance/${_nameController.text}');
+    final response = await http.get(url);
 
-    super.dispose();
+    if (response.statusCode == 200) {
+      setState(() {
+        _performanceData = jsonDecode(response.body);
+      });
+    } else {
+      setState(() {
+        _responseMessage = jsonDecode(response.body)['detail'] ?? 'An error occurred.';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
-          automaticallyImplyLeading: false,
-          title: Text(
-            'Running Performance',
-            style: FlutterFlowTheme.of(context).headlineMedium.override(
-                  fontFamily: 'Inter Tight',
-                  color: Colors.white,
-                  fontSize: 22.0,
-                  letterSpacing: 0.0,
-                ),
-          ),
-          actions: [],
-          centerTitle: false,
-          elevation: 2.0,
-        ),
-        body: SafeArea(
-          top: true,
-          child: Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Material(
-                    color: Colors.transparent,
-                    elevation: 2.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width * 1.0,
-                      decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).secondaryBackground,
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
-                            20.0, 20.0, 20.0, 20.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Today\'s Run',
-                              style: FlutterFlowTheme.of(context)
-                                  .headlineSmall
-                                  .override(
-                                    fontFamily: 'Inter Tight',
-                                    letterSpacing: 0.0,
-                                  ),
-                            ),
-                          ].divide(SizedBox(height: 16.0)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    elevation: 2.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width * 1.0,
-                      decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).secondaryBackground,
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
-                            20.0, 20.0, 20.0, 20.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Performance Metrics',
-                              style: FlutterFlowTheme.of(context)
-                                  .headlineSmall
-                                  .override(
-                                    fontFamily: 'Inter Tight',
-                                    letterSpacing: 0.0,
-                                  ),
-                            ),
-                          ].divide(SizedBox(height: 16.0)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    elevation: 2.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width * 1.0,
-                      decoration: BoxDecoration(
-                        color: FlutterFlowTheme.of(context).secondaryBackground,
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
-                            20.0, 20.0, 20.0, 20.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Exit',
-                              style: FlutterFlowTheme.of(context)
-                                  .headlineSmall
-                                  .override(
-                                    fontFamily: 'Inter Tight',
-                                    letterSpacing: 0.0,
-                                  ),
-                            ),
-                          ].divide(SizedBox(height: 16.0)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ].divide(SizedBox(height: 24.0)),
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Performance Check'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Name'),
             ),
-          ),
+            TextField(
+              controller: _timingController,
+              decoration: InputDecoration(labelText: 'Timing'),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ElevatedButton(
+                  onPressed: addRaceResult,
+                  child: Text('Add Result'),
+                ),
+                ElevatedButton(
+                  onPressed: viewPerformance,
+                  child: Text('View Performance'),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            if (_responseMessage.isNotEmpty) Text(_responseMessage),
+            if (_improvementTips != null && _improvementTips!.isNotEmpty) ...[
+              Text('Improvement Tips:', style: TextStyle(fontWeight: FontWeight.bold)),
+              ..._improvementTips!.map((tip) => Text('- $tip')).toList(),
+            ],
+            if (_performanceData != null) ...[
+              Text('Name: ${_performanceData!['name']}'),
+              Text('Total Races: ${_performanceData!['total_races']}'),
+              Text('Average Timing: ${_performanceData!['average_timing']}'),
+              Text('Below Threshold: ${_performanceData!['below_threshold']}'),
+              Text('Above Threshold: ${_performanceData!['above_threshold']}'),
+              SizedBox(height: 16),
+              Text('Details:'),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _performanceData!['details'].length,
+                  itemBuilder: (context, index) {
+                    final race = _performanceData!['details'][index];
+                    return ListTile(
+                      title: Text('Race ${index + 1}'),
+                      subtitle: Text(
+                          'Timing: ${race['timing']}, Status: ${race['status']}, Level: ${race['level']}'),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
